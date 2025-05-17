@@ -63,10 +63,11 @@ function getData() {
     url: apiGatewayUrl,
     type: 'GET',
     success: function(data) {
-      // The 'data' here is already the JSON body from the Lambda response via API Gateway
-      var redCount = data.RED || 0;
-      var greenCount = data.GREEN || 0;
-      var blueCount = data.BLUE || 0;
+      var voteCounts = JSON.parse(data.body);
+
+      var redCount = voteCounts.RED || 0;
+      var greenCount = voteCounts.GREEN || 0;
+      var blueCount = voteCounts.BLUE || 0;
 
       var chartData = [
         {
