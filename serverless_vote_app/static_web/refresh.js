@@ -11,14 +11,7 @@ or in the "license" file accompanying this file. This file is distributed on an
 implied. See the License for the specific language governing permissions and 
 limitations under the License. */
 
-// Region and IdentityPoolId should be set to your own values
-AWS.config.region = '<your-region-here>'; // Region
-AWS.config.credentials = new AWS.CognitoIdentityCredentials({
-    IdentityPoolId: '<your-identity-pool-id-here>',
-});
-
-var dynamodb = new AWS.DynamoDB();
-var params = { TableName: 'VoteAppAggregates' };
+var apiGatewayUrl = 'https://1234567890.execute-api.us-west-2.amazonaws.com/prod/vote'; // Replace with your API Gateway Invoke URL
 
 /* Create the context for applying the chart to the HTML canvas */
 var ctx = $("#graph").get(0).getContext("2d");
@@ -64,30 +57,18 @@ $(function() {
   setInterval(getData, 3000);
 });
 
-/* Makes a scan of the DynamoDB table to set a data object for the chart */
+/* Makes a call to API Gateway to get data for the chart */
 function getData() {
-  dynamodb.scan(params, function(err, data) {
-    if (err) {
-      console.log(err);
-      return null;
-    } else {
-      var redCount = 0;
-      var greenCount = 0;
-      var blueCount = 0;
+  $.ajax({
+    url: apiGatewayUrl,
+    type: 'GET',
+    success: function(data) {
+      // The 'data' here is already the JSON body from the Lambda response via API Gateway
+      var redCount = data.RED || 0;
+      var greenCount = data.GREEN || 0;
+      var blueCount = data.BLUE || 0;
 
-      for (var i in data['Items']) {
-        if (data['Items'][i]['VotedFor']['S'] == "RED") {
-          redCount = parseInt(data['Items'][i]['Vote']['N']);
-        }
-        if (data['Items'][i]['VotedFor']['S'] == "GREEN") {
-          greenCount = parseInt(data['Items'][i]['Vote']['N']);
-        }
-        if (data['Items'][i]['VotedFor']['S'] == "BLUE") {
-          blueCount = parseInt(data['Items'][i]['Vote']['N']);
-        }
-      }
-
-      var data = [
+      var chartData = [
         {
             value: redCount,
             color:"#e74c3c",
@@ -109,17 +90,20 @@ function getData() {
       ];
 
       /* Only update if we have new values (preserves tooltips) */
-      if (  graph.segments[0].value != data[0].value ||
-            graph.segments[1].value != data[1].value ||
-            graph.segments[2].value != data[2].value
+      if (  graph.segments[0].value != chartData[0].value ||
+            graph.segments[1].value != chartData[1].value ||
+            graph.segments[2].value != chartData[2].value
          )
       {
-        graph.segments[0].value = data[0].value;
-        graph.segments[1].value = data[1].value;
-        graph.segments[2].value = data[2].value;
+        graph.segments[0].value = chartData[0].value;
+        graph.segments[1].value = chartData[1].value;
+        graph.segments[2].value = chartData[2].value;
         graph.update();
       }
-
+    },
+    error: function(jqXHR, textStatus, errorThrown) {
+      console.log("Error fetching data from API Gateway: ", textStatus, errorThrown);
+      console.log(jqXHR.responseText);
     }
   });
 }
