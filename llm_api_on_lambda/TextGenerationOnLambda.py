@@ -9,10 +9,9 @@ def lambda_handler(event, context):
     prompt = body.get("prompt", None)
 
     if prompt is None:
-        error_msg = "Bad Request: prompt is required"
         return {
             "statusCode": 400,
-            "body": json.dumps(error_msg)
+            "body": json.dumps("prompt is required in request body")
         }
     
     api_response = client.models.generate_content(
