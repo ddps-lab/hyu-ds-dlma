@@ -1,9 +1,8 @@
 import json
 from google import genai
 
-# Please enter your API key here.
-# For security, it is recommended to manage it as an environment variable.
-client = genai.Client(api_key="GOOGLE_API_KEY")
+# You have to set the environment variable GOOGLE_API_KEY
+client = genai.Client()
 
 def lambda_handler(event, context):
     body = json.loads(event['body'])
