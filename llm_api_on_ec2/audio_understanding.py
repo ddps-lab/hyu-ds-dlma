@@ -17,10 +17,6 @@ print("Describe this audio clip:\n")
 # Print the description of the audio clip.
 print(response.text)
 
-# Re-upload the audio file (or use the existing 'myfile' object if appropriate for the API).
-# For this example, we are explicitly re-uploading as per the original code.
-myfile = client.files.upload(file='sample-0.wav')
-
 # Define the prompt for generating a transcript.
 prompt = 'Generate a transcript of the speech.'
 
